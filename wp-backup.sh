@@ -47,3 +47,15 @@ echo "Archiving files..."
 tar -czf "$FILES_BACKUP_FILE" -C "$WP_DIR" --exclude="wp-content/cache" . || [[ $? -eq 1 ]]
 
 echo "Local backups created."
+
+echo "Uploading to Google Drive via rclone..."
+rclone copy "$DB_BACKUP_FILE" "$RCLONE_REMOTE/$DATE/"
+rclone copy "$FILES_BACKUP_FILE" "$RCLONE_REMOTE/$DATE/"
+
+echo "Cleaning up local backups..."
+rm -f "$DB_BACKUP_FILE" "$FILES_BACKUP_FILE"
+
+echo "Applying retention policy (keeping last 30 days)..."
+rclone delete "$RCLONE_REMOTE" --min-age 30d --rmdirs
+
+echo "Backup completed successfully."
