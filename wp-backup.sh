@@ -54,8 +54,10 @@ rclone copy "$FILES_BACKUP_FILE" "$RCLONE_REMOTE/$DATE/"
 
 echo "Cleaning up local backups..."
 rm -f "$DB_BACKUP_FILE" "$FILES_BACKUP_FILE"
+find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +7 -delete || true
+find "$BACKUP_DIR" -type f -name "*.sql.gz" -mtime +7 -delete || true
 
 echo "Applying retention policy (keeping last 30 days)..."
-rclone delete "$RCLONE_REMOTE" --min-age 30d --rmdirs
+rclone delete "$RCLONE_REMOTE" --min-age 30d --rmdirs --fast-list
 
 echo "Backup completed successfully."
