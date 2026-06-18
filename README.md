@@ -36,7 +36,7 @@
 3. **设置定时任务 (Cron)**：
    运行 `crontab -e` 并在末尾添加（例如每周三周六凌晨 2 点执行）：
    ```bash
-   0 2 * * 3,6 /path/to/wordpressbackup/wp-backup.sh >> /var/log/wp-backup.log 2>&1
+   0 2 * * 3,6 /home/ubuntu/project/02-wp-gdrive-backup/wp-backup.sh >> /var/log/wp-backup.log 2>&1
    ```
 
 ## 环境变量配置
@@ -93,4 +93,20 @@ chmod +x wp-restore.sh
    # 解压 SQL 文件并导入到 MySQL 中
    gunzip < db_backup_2026-06-18.sql.gz | mysql -u <数据库用户名> -p <数据库名>
    ```
-   *(执行时会提示输入密码。如果忘记了，可以 `cat /var/www/html/wp-config.php` 查看)*
+
+   **💡 如何查看您的数据库账号和密码？**
+   
+   如果您忘记了数据库凭据，可以从 WordPress 的配置文件 `wp-config.php` 中查找。该文件通常位于您的网站根目录（例如 `/var/www/html`）。
+   使用以下命令即可快速查看：
+   
+   ```bash
+   grep -E "DB_NAME|DB_USER|DB_PASSWORD" /var/www/html/wp-config.php
+   ```
+   
+   您会看到类似如下的输出：
+   ```php
+   define( 'DB_NAME', 'wordpress_db' );     // 您的数据库名
+   define( 'DB_USER', 'wp_user' );          // 您的数据库用户名
+   define( 'DB_PASSWORD', 'your_password' );// 您的数据库密码
+   ```
+   根据输出的内容，将上述命令中的 `<数据库用户名>` 和 `<数据库名>` 替换掉，并在提示输入密码时粘贴您的 `DB_PASSWORD` 即可。
