@@ -34,9 +34,9 @@
    **注意**：在配置中将您的 Remote 命名为 `gdrive`，或者如果您使用了其他名称，请相应地修改 `wp-backup.sh` 中的 `RCLONE_REMOTE` 变量。
 
 3. **设置定时任务 (Cron)**：
-   运行 `crontab -e` 并在末尾添加（例如每天凌晨 2 点执行）：
+   运行 `crontab -e` 并在末尾添加（例如每周三周六凌晨 2 点执行）：
    ```bash
-   0 2 * * * /path/to/wordpressbackup/wp-backup.sh >> /var/log/wp-backup.log 2>&1
+   0 2 * * 3,6 /path/to/wordpressbackup/wp-backup.sh >> /var/log/wp-backup.log 2>&1
    ```
 
 ## 环境变量配置
@@ -54,7 +54,7 @@ WP_DIR=/home/www/mysite ./wp-backup.sh
 
 ## 灾难恢复
 
-遇到网站故障或数据丢失时，您可以执行以下恢复流程：
+遇到网站故障或数据丢失时，我们提供了一个全自动的通用恢复脚本 `wp-restore.sh`，极大简化了恢复流程。
 
 ### 1. 从 Google Drive 拉取备份
 
@@ -64,17 +64,13 @@ rclone copy "gdrive:wp-backups/2026-06-18/db_backup_2026-06-18.sql.gz" ./
 rclone copy "gdrive:wp-backups/2026-06-18/files_backup_2026-06-18.tar.gz" ./
 ```
 
-### 2. 恢复 WordPress 文件
+### 2. 使用一键恢复脚本
+
+提供刚刚下载的两个文件路径给恢复脚本，它会自动解压文件，并从恢复出的 `wp-config.php` 中提取账号密码完成数据库导入：
 
 ```bash
-# 将网站文件解压回原目录（以 /var/www/html 为例）
-sudo tar -xzf files_backup_2026-06-18.tar.gz -C /var/www/html
+chmod +x wp-restore.sh
+./wp-restore.sh files_backup_2026-06-18.tar.gz db_backup_2026-06-18.sql.gz /var/www/html
 ```
 
-### 3. 恢复数据库
-
-```bash
-# 解压 SQL 文件并导入到 MySQL 中
-gunzip < db_backup_2026-06-18.sql.gz | mysql -u <数据库用户名> -p <数据库名>
-```
-*(导入时会提示您输入密码，请查阅 `wp-config.php` 获取)*
+按提示输入 `y` 确认覆盖后，脚本便会自动完成剩余的全部工作！
