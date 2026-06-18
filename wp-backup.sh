@@ -1,25 +1,25 @@
 #!/bin/bash
 set -euo pipefail
 
-# Default variables
+# 默认变量配置
 WP_DIR="${WP_DIR:-/var/www/html}"
 BACKUP_DIR="${BACKUP_DIR:-/tmp/wp-backups}"
-RCLONE_REMOTE="${RCLONE_REMOTE:-gdrive:wp-backups}"
+RCLONE_REMOTE="${RCLONE_REMOTE:-serverbackup:wp-backups}"
 DATE=$(date +"%Y-%m-%d")
 
-# Check dependencies
+# 检查系统依赖
 for cmd in mysqldump tar gzip rclone; do
     if ! command -v "$cmd" &> /dev/null; then
-        echo "Error: $cmd is not installed."
+        echo "错误: 未安装 $cmd。"
         exit 1
     fi
 done
 
-echo "All dependencies met."
+echo "所有依赖检查通过。"
 
-echo "Reading database credentials..."
+echo "正在读取数据库凭据..."
 if [ ! -f "$WP_DIR/wp-config.php" ]; then
-    echo "Error: wp-config.php not found at $WP_DIR"
+    echo "错误: 在 $WP_DIR 下未找到 wp-config.php 文件"
     exit 1
 fi
 
@@ -29,35 +29,36 @@ DB_PASSWORD=$(sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_PASSWORD['\"][[:
 DB_HOST=$(sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_HOST['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
 
 if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ]; then
-    echo "Error: Could not extract database credentials."
+    echo "错误: 无法提取数据库凭据。"
     exit 1
 fi
-echo "Credentials extracted successfully."
+echo "凭据提取成功。"
 
-# Add to wp-backup.sh at the end
+# 创建本地备份目录
 mkdir -p "$BACKUP_DIR"
 
 DB_BACKUP_FILE="$BACKUP_DIR/db_backup_$DATE.sql.gz"
 FILES_BACKUP_FILE="$BACKUP_DIR/files_backup_$DATE.tar.gz"
 
-echo "Exporting database..."
-MYSQL_PWD="$DB_PASSWORD" mysqldump -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" | gzip > "$DB_BACKUP_FILE"
+echo "正在导出数据库..."
+# 添加 --no-tablespaces 参数以解决 PROCESS 权限报错
+MYSQL_PWD="$DB_PASSWORD" mysqldump --no-tablespaces -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" | gzip > "$DB_BACKUP_FILE"
 
-echo "Archiving files..."
+echo "正在打包网站文件..."
 tar -czf "$FILES_BACKUP_FILE" -C "$WP_DIR" --exclude="wp-content/cache" . || [[ $? -eq 1 ]]
 
-echo "Local backups created."
+echo "本地备份文件创建完毕。"
 
-echo "Uploading to Google Drive via rclone..."
+echo "正在通过 rclone 上传到云端..."
 rclone copy "$DB_BACKUP_FILE" "$RCLONE_REMOTE/$DATE/"
 rclone copy "$FILES_BACKUP_FILE" "$RCLONE_REMOTE/$DATE/"
 
-echo "Cleaning up local backups..."
+echo "正在清理本地备份..."
 rm -f "$DB_BACKUP_FILE" "$FILES_BACKUP_FILE"
 find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +7 -delete || true
 find "$BACKUP_DIR" -type f -name "*.sql.gz" -mtime +7 -delete || true
 
-echo "Applying retention policy (keeping last 30 days)..."
+echo "正在应用保留策略（云端保留最近 30 天）..."
 rclone delete "$RCLONE_REMOTE" --min-age 30d --rmdirs --fast-list
 
-echo "Backup completed successfully."
+echo "备份任务圆满完成。"
