@@ -41,9 +41,9 @@ DB_BACKUP_FILE="$BACKUP_DIR/db_backup_$DATE.sql.gz"
 FILES_BACKUP_FILE="$BACKUP_DIR/files_backup_$DATE.tar.gz"
 
 echo "Exporting database..."
-mysqldump -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" | gzip > "$DB_BACKUP_FILE"
+MYSQL_PWD="$DB_PASSWORD" mysqldump -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" | gzip > "$DB_BACKUP_FILE"
 
 echo "Archiving files..."
-tar -czf "$FILES_BACKUP_FILE" -C "$WP_DIR" --exclude="wp-content/cache" .
+tar -czf "$FILES_BACKUP_FILE" -C "$WP_DIR" --exclude="wp-content/cache" . || [[ $? -eq 1 ]]
 
 echo "Local backups created."
