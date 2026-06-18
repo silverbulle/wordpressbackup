@@ -33,3 +33,17 @@ if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ]; then
     exit 1
 fi
 echo "Credentials extracted successfully."
+
+# Add to wp-backup.sh at the end
+mkdir -p "$BACKUP_DIR"
+
+DB_BACKUP_FILE="$BACKUP_DIR/db_backup_$DATE.sql.gz"
+FILES_BACKUP_FILE="$BACKUP_DIR/files_backup_$DATE.tar.gz"
+
+echo "Exporting database..."
+mysqldump -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" | gzip > "$DB_BACKUP_FILE"
+
+echo "Archiving files..."
+tar -czf "$FILES_BACKUP_FILE" -C "$WP_DIR" --exclude="wp-content/cache" .
+
+echo "Local backups created."
