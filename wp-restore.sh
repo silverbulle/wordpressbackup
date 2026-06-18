@@ -44,14 +44,36 @@ if [ ! -f "$WP_DIR/wp-config.php" ]; then
     exit 1
 fi
 
-# 提取数据库凭据
-DB_NAME=$(sudo sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_NAME['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
-DB_USER=$(sudo sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_USER['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
-DB_PASSWORD=$(sudo sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_PASSWORD['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
-DB_HOST=$(sudo sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_HOST['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
+# 提取备份中的数据库凭据
+DB_NAME_CFG=$(sudo sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_NAME['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
+DB_USER_CFG=$(sudo sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_USER['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
+DB_PASSWORD_CFG=$(sudo sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_PASSWORD['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
+DB_HOST_CFG=$(sudo sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_HOST['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
+
+echo "-------------------------------------------------"
+echo "从备份的 wp-config.php 中提取到以下配置："
+echo "数据库名: $DB_NAME_CFG"
+echo "用户名:   $DB_USER_CFG"
+echo "主机:     $DB_HOST_CFG"
+echo "-------------------------------------------------"
+read -p "如果您在同一台机器上原样恢复，请直接按回车；如果是迁移到新环境，您可能需要提供新的连接凭据。是否使用上面的配置？(Y/n) " use_cfg
+
+if [[ $use_cfg =~ ^[Nn]$ ]]; then
+    read -p "请输入新的数据库主机 (默认: localhost): " input_host
+    DB_HOST=${input_host:-localhost}
+    read -p "请输入新的数据库名: " DB_NAME
+    read -p "请输入新的数据库用户: " DB_USER
+    read -s -p "请输入新的数据库密码: " DB_PASSWORD
+    echo
+else
+    DB_NAME=$DB_NAME_CFG
+    DB_USER=$DB_USER_CFG
+    DB_PASSWORD=$DB_PASSWORD_CFG
+    DB_HOST=$DB_HOST_CFG
+fi
 
 if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ]; then
-    echo "错误: 无法从 wp-config.php 提取数据库凭据。"
+    echo "错误: 数据库凭据缺失，无法进行恢复。"
     exit 1
 fi
 

@@ -64,13 +64,33 @@ rclone copy "gdrive:wp-backups/2026-06-18/db_backup_2026-06-18.sql.gz" ./
 rclone copy "gdrive:wp-backups/2026-06-18/files_backup_2026-06-18.tar.gz" ./
 ```
 
-### 2. 使用一键恢复脚本
+### 2. 恢复选项
 
-提供刚刚下载的两个文件路径给恢复脚本，它会自动解压文件，并从恢复出的 `wp-config.php` 中提取账号密码完成数据库导入：
+我们提供了两种恢复方式，您可以选择使用全自动的一键恢复脚本，或手动执行命令：
+
+#### 选项 A：使用一键恢复脚本（推荐）
+
+提供下载好的两个文件路径给恢复脚本。它会自动解压文件，并读取出备份中 `wp-config.php` 的原数据库配置，随后**它会询问您是否继续使用原配置**。
+如果您是原机故障恢复，直接回车使用原配置即可；如果您是迁移到了新的服务器，您可以输入 `n` 然后手动输入新服务器的数据库账密来完成导入。
 
 ```bash
 chmod +x wp-restore.sh
 ./wp-restore.sh files_backup_2026-06-18.tar.gz db_backup_2026-06-18.sql.gz /var/www/html
 ```
 
-按提示输入 `y` 确认覆盖后，脚本便会自动完成剩余的全部工作！
+#### 选项 B：手动恢复
+
+如果您更喜欢精细控制，可以手动执行以下命令：
+
+1. **恢复 WordPress 文件**
+   ```bash
+   # 将网站文件解压回原目录
+   sudo tar -xzf files_backup_2026-06-18.tar.gz -C /var/www/html
+   ```
+
+2. **恢复数据库**
+   ```bash
+   # 解压 SQL 文件并导入到 MySQL 中
+   gunzip < db_backup_2026-06-18.sql.gz | mysql -u <数据库用户名> -p <数据库名>
+   ```
+   *(执行时会提示输入密码。如果忘记了，可以 `cat /var/www/html/wp-config.php` 查看)*
