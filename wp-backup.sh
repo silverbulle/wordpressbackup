@@ -23,10 +23,10 @@ if [ ! -f "$WP_DIR/wp-config.php" ]; then
     exit 1
 fi
 
-DB_NAME=$(grep -e "define( *'DB_NAME'" "$WP_DIR/wp-config.php" | awk -F"'" '{print $4}')
-DB_USER=$(grep -e "define( *'DB_USER'" "$WP_DIR/wp-config.php" | awk -F"'" '{print $4}')
-DB_PASSWORD=$(grep -e "define( *'DB_PASSWORD'" "$WP_DIR/wp-config.php" | awk -F"'" '{print $4}')
-DB_HOST=$(grep -e "define( *'DB_HOST'" "$WP_DIR/wp-config.php" | awk -F"'" '{print $4}')
+DB_NAME=$(sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_NAME['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
+DB_USER=$(sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_USER['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
+DB_PASSWORD=$(sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_PASSWORD['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
+DB_HOST=$(sed -n "s/^[[:space:]]*define([[:space:]]*['\"]DB_HOST['\"][[:space:]]*,[[:space:]]*['\"]\(.*\)['\"][[:space:]]*);.*/\1/p" "$WP_DIR/wp-config.php")
 
 if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ]; then
     echo "Error: Could not extract database credentials."
