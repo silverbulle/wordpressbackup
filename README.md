@@ -33,7 +33,19 @@
    ```
    **注意**：在配置中将您的 Remote 命名为 `gdrive`，或者如果您使用了其他名称，请相应地修改 `wp-backup.sh` 中的 `RCLONE_REMOTE` 变量。
 
-3. **设置定时任务 (Cron)**：
+3. **配置邮件报警与状态通知（可选）**：
+   备份脚本运行结束后，可以自动收集**服务器状态（磁盘、内存性能）**和**安全警报（尝试非法登录 SSH 的 IP 列表）**，并将报告通过邮件发送给您。
+   如果您希望启用此功能：
+   编辑同目录下的 `wp-report.py`，将顶部的 SMTP 配置替换为您自己的邮箱参数（比如 Gmail 授权码 或 QQ邮箱授权码）：
+   ```python
+   SMTP_SERVER = "smtp.gmail.com"
+   SMTP_USER = "your_email@gmail.com"
+   SMTP_PASS = "your_app_password"
+   TO_EMAIL = "your_email@gmail.com"
+   ```
+   *注意：只要配置了此脚本并放在 `wp-backup.sh` 同级目录，备份脚本在成功或失败时都会自动调用它发送报告。若不想发邮件，只需将 `wp-report.py` 移走或删除即可。*
+
+4. **设置定时任务 (Cron)**：
    运行 `crontab -e` 并在末尾添加（例如每周三周六凌晨 2 点执行）：
    ```bash
    0 2 * * 3,6 /home/ubuntu/project/02-wp-gdrive-backup/wp-backup.sh >> /var/log/wp-backup.log 2>&1
