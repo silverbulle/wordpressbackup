@@ -15,34 +15,12 @@ function finish_and_report() {
         status="❌ 备份任务失败 (退出码: $exit_code)"
     fi
 
-    echo "正在生成系统状态报告..."
-    REPORT_FILE="/tmp/wp-backup-report.txt"
-    {
-        echo "==================================="
-        echo " 📊 WordPress 备份与系统状态报告"
-        echo "==================================="
-        echo "时间: $(date +'%Y-%m-%d %H:%M:%S')"
-        echo "状态: $status"
-        echo ""
-        echo "---------- 💾 存储使用情况 ----------"
-        df -h /
-        echo ""
-        echo "---------- ⚡ 性能使用情况 ----------"
-        uptime
-        echo ""
-        free -m
-        echo ""
-        echo "---------- 🛡️ 安全：过去 24 小时非法 SSH 登录尝试 (Top 10 IP) ----------"
-        # 统计 SSH 爆破失败的 IP 列表
-        journalctl -u ssh --since "1 day ago" 2>/dev/null | grep "Failed password" | awk '{for(i=1;i<=NF;i++) if($i=="from") print $(i+1)}' | sort | uniq -c | sort -nr | head -10 || echo "无记录"
-        echo "==================================="
-    } > "$REPORT_FILE"
-
-    # 如果配置了邮件脚本，则发送邮件
-    REPORT_SCRIPT="$(dirname "$0")/wp-report.py"
-    if [ -f "$REPORT_SCRIPT" ]; then
-        # 运行 Python 脚本发送邮件
-        python3 "$REPORT_SCRIPT" "【服务器报告】$status - $(date +'%m-%d')" "$REPORT_FILE" || true
+    # 调用独立的健康巡检脚本发送合并报告
+    HEALTH_SCRIPT="$(dirname "$0")/wp-health-check.sh"
+    if [ -x "$HEALTH_SCRIPT" ]; then
+        "$HEALTH_SCRIPT" "$status"
+    else
+        echo "提示: 未找到可执行的 wp-health-check.sh，跳过系统状态报告。"
     fi
 }
 trap finish_and_report EXIT
