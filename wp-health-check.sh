@@ -55,7 +55,17 @@ REPORT_FILE="/tmp/wp-health-report.txt"
         echo "❌ Web 页面连通性: 异常 (状态码: $HTTP_CODE)"
     fi
     echo ""
-    echo "---------- 🛡️ 安全：过去 24 小时非法 SSH 登录尝试 (Top 10 IP) ----------"
+    echo "---------- 🚨 安全：过去 24 小时【成功】的 SSH 登录记录 ----------"
+    # 统计成功的 SSH 登录记录
+    SUCCESS_SSH=$(journalctl -u ssh --since "1 day ago" 2>/dev/null | grep "Accepted" | awk '{print $1,$2,$3, "用户:",$9, "IP:",$11}' || true)
+    if [ -n "$SUCCESS_SSH" ]; then
+        echo "⚠️ 警告：检测到有成功的 SSH 登录，请核对是否为您本人的操作！"
+        echo "$SUCCESS_SSH"
+    else
+        echo "无成功登录记录"
+    fi
+    echo ""
+    echo "---------- 🛡️ 安全：过去 24 小时【失败】的 SSH 登录尝试 (Top 10 IP) ----------"
     # 统计 SSH 爆破失败的 IP 列表
     journalctl -u ssh --since "1 day ago" 2>/dev/null | grep "Failed password" | awk '{for(i=1;i<=NF;i++) if($i=="from") print $(i+1)}' | sort | uniq -c | sort -nr | head -10 || echo "无记录"
     echo "==================================="
