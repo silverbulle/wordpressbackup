@@ -41,7 +41,7 @@ html_content = f"""
         <div style="font-size: 14px; line-height: 1.6; color: #34495e;">
 """
 
-for line in report_content.split('\\n'):
+for line in report_content.split('\n'):
     if "⚠️ 警告" in line:
         html_content += f'<div style="color: white; background-color: #e74c3c; padding: 12px; border-radius: 5px; font-weight: bold; font-size: 15px; margin: 10px 0;">🚨 {line}</div>'
     elif "✅" in line:
