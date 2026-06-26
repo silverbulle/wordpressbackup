@@ -7,6 +7,11 @@ BACKUP_DIR="${BACKUP_DIR:-/tmp/wp-backups}"
 RCLONE_REMOTE="${RCLONE_REMOTE:-serverbackup:wp-backups}"
 DATE=$(date +"%Y-%m-%d")
 
+# === 执行日志时间戳头部 ===
+echo -e "\n\n========================================================"
+echo "🚀 开始执行备份任务 - $(date +'%Y-%m-%d %H:%M:%S')"
+echo "========================================================"
+
 # === 邮件报告与收尾逻辑 ===
 function finish_and_report() {
     local exit_code=$?
