@@ -23,29 +23,19 @@ REPORT_FILE="/tmp/wp-health-report.txt"
     free -m
     echo ""
     echo "---------- 🔧 关键服务运行状态 ----------"
-    # 检查 Web 服务器状态 (优先检查 apache2, httpd, 然后 nginx)
-    for service in apache2 httpd nginx; do
-        if systemctl list-unit-files 2>/dev/null | grep -q "^${service}.service"; then
-            if systemctl is-active --quiet "$service"; then
-                echo "✅ Web Server ($service): 运行中"
-            else
-                echo "❌ Web Server ($service): 异常/停止"
-            fi
-            break
-        fi
-    done
+    # 检查 Apache2 状态
+    if systemctl is-active --quiet apache2; then
+        echo "✅ Web Server (apache2): 运行中"
+    else
+        echo "❌ Web Server (apache2): 异常/停止"
+    fi
 
-    # 检查数据库状态 (mysql 或 mariadb)
-    for db_service in mysql mariadb; do
-        if systemctl list-unit-files 2>/dev/null | grep -q "^${db_service}.service"; then
-            if systemctl is-active --quiet "$db_service"; then
-                echo "✅ 数据库 ($db_service): 运行中"
-            else
-                echo "❌ 数据库 ($db_service): 异常/停止"
-            fi
-            break
-        fi
-    done
+    # 检查 MySQL 状态
+    if systemctl is-active --quiet mysql; then
+        echo "✅ 数据库 (mysql): 运行中"
+    else
+        echo "❌ 数据库 (mysql): 异常/停止"
+    fi
 
     # 检查本地 Web 页面连通性
     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://127.0.0.1/ || echo "000")
