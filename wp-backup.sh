@@ -69,7 +69,12 @@ echo "正在导出数据库..."
 MYSQL_PWD="$DB_PASSWORD" mysqldump --no-tablespaces -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" | gzip > "$DB_BACKUP_FILE"
 
 echo "正在打包网站文件..."
-tar -czf "$FILES_BACKUP_FILE" -C "$WP_DIR" --exclude="wp-content/cache" . || [[ $? -eq 1 ]]
+tar -czf "$FILES_BACKUP_FILE" -C "$WP_DIR" \
+    --exclude="wp-content/cache" \
+    --exclude="wp-content/updraft" \
+    --exclude="wp-content/ai1wm-backups" \
+    --exclude="wp-content/upgrade-temp-backup" \
+    . || [[ $? -eq 1 ]]
 
 echo "本地备份文件创建完毕。"
 
