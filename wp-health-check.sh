@@ -18,6 +18,19 @@ REPORT_FILE="/tmp/wp-health-report.txt"
     echo "==================================="
     echo "时间: $(date +'%Y-%m-%d %H:%M:%S')"
     echo "状态: $TASK_STATUS"
+    
+    if [[ "$TASK_STATUS" == *"失败"* ]]; then
+        echo ""
+        echo "---------- 🚨 备份失败详细日志 ----------"
+        echo "⚠️ 警告：检测到任务异常中断！以下是最近产生的执行日志（最后 15 行）："
+        echo "日志文件参考位置: /var/log/wp-backup.log"
+        echo ""
+        if [ -f "/var/log/wp-backup.log" ]; then
+            tail -n 15 /var/log/wp-backup.log || echo "无法读取日志文件"
+        else
+            echo "未找到日志文件 /var/log/wp-backup.log"
+        fi
+    fi
     echo ""
     echo "---------- 💾 存储使用情况 ----------"
     df -h /
